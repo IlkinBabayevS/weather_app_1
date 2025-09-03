@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hava Durumu</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #6dd5ed, #2193b0);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 450px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s ease;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        
+        .header h1 {
+            color: #2193b0;
+            font-weight: 600;
+        }
+        
+        .search-box {
+            display: flex;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+        
+        .search-box input {
+            flex: 1;
+            height: 50px;
+            border: none;
+            outline: none;
+            background: #f0f0f0;
+            border-radius: 25px 0 0 25px;
+            padding: 0 20px;
+            font-size: 16px;
+        }
+        
+        .search-box button {
+            width: 50px;
+            height: 50px;
+            border: none;
+            outline: none;
+            background: #2193b0;
+            color: white;
+            border-radius: 0 25px 25px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .search-box button:hover {
+            background: #1a7a94;
+        }
+        
+        .weather-info {
+            text-align: center;
+            display: none;
+        }
+        
+        .city-name {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        
+        .temperature {
+            font-size: 70px;
+            font-weight: 700;
+            margin: 15px 0;
+            color: #2193b0;
+        }
+        
+        .weather-icon {
+            font-size: 80px;
+            margin: 15px 0;
+            color: #ff8c00;
+        }
+        
+        .description {
+            font-size: 22px;
+            margin-bottom: 15px;
+            color: #555;
+            text-transform: capitalize;
+        }
+        
+        .details {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 25px;
+            padding-top: 25px;
+            border-top: 1px solid #ddd;
+        }
+        
+        .details .col {
+            display: flex;
+            align-items: center;
+            flex: 1;
+            flex-direction: column;
+        }
+        
+        .details .col i {
+            font-size: 24px;
+            color: #2193b0;
+            margin-bottom: 10px;
+        }
+        
+        .humidity, .wind {
+            font-size: 18px;
+            color: #555;
+        }
+        
+        .humidity span, .wind span {
+            font-size: 16px;
+            color: #888;
+        }
+        
+        .error-message {
+            text-align: center;
+            color: #e74c3c;
+            font-size: 16px;
+            margin-top: 15px;
+            display: none;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 25px;
+            color: #777;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Hava Durumu</h1>
+        </div>
+        
+        <div class="search-box">
+            <input type="text" placeholder="Şehir adını girin..." id="city-input">
+            <button id="search-btn"><i class="fas fa-search"></i></button>
+        </div>
+        
+        <div class="error-message" id="error-message">
+            Şehir bulunamadı. Lütfen geçerli bir şehir adı girin.
+        </div>
+        
+        <div class="weather-info" id="weather-info">
+            <div class="city-name" id="city-name">İstanbul</div>
+            <div class="weather-icon">
+                <i class="fas fa-sun" id="weather-icon"></i>
+            </div>
+            <div class="temperature" id="temperature">25°C</div>
+            <div class="description" id="description">Açık</div>
+            
+            <div class="details">
+                <div class="col">
+                    <i class="fas fa-tint"></i>
+                    <div class="humidity" id="humidity">%50</div>
+                    <span>Nem</span>
+                </div>
+                <div class="col">
+                    <i class="fas fa-wind"></i>
+                    <div class="wind" id="wind">5 km/s</div>
+                    <span>Rüzgar</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>OpenWeatherMap API kullanılmıştır</p>
+        </div>
+    </div>
+
+    <script>
+        const apiKey = 'your_api_key_here'; // OpenWeatherMap'ten alacağınız API anahtarını buraya girin
+        const searchBtn = document.getElementById('search-btn');
+        const cityInput = document.getElementById('city-input');
+        const weatherInfo = document.getElementById('weather-info');
+        const errorMessage = document.getElementById('error-message');
+        
+        // API anahtarını kontrol et
+        if (apiKey === 'your_api_key_here') {
+            alert('Lütfen OpenWeatherMap sitesinden ücretsiz API anahtarını alıp koda ekleyin.');
+        }
+        
+        searchBtn.addEventListener('click', getWeather);
+        cityInput.addEventListener('keyup', function(event) {
+            if (event.key === 'Enter') {
+                getWeather();
+            }
+        });
+        
+        function getWeather() {
+            const city = cityInput.value.trim();
+            
+            if (city === '') {
+                return;
+            }
+            
+            const apiUrl = `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=${apiKey}`;
+            
+            fetch(apiUrl)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Şehir bulunamadı');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    displayWeather(data);
+                })
+                .catch(error => {
+                    showError();
+                });
+        }
+        
+        function displayWeather(data) {
+            errorMessage.style.display = 'none';
+            
+            const cityName = data.name;
+            const temperature = Math.round(data.main.temp);
+            const description = data.weather[0].description;
+            const humidity = data.main.humidity;
+            const windSpeed = data.wind.speed;
+            const iconCode = data.weather[0].icon;
+            
+            document.getElementById('city-name').textContent = cityName;
+            document.getElementById('temperature').textContent = `${temperature}°C`;
+            document.getElementById('description').textContent = description;
+            document.getElementById('humidity').textContent = `%${humidity}`;
+            document.getElementById('wind').textContent = `${windSpeed} km/s`;
+            
+            // Hava durumu ikonunu güncelle
+            const weatherIcon = document.getElementById('weather-icon');
+            weatherIcon.className = getWeatherIconClass(iconCode);
+            
+            weatherInfo.style.display = 'block';
+        }
+        
+        function getWeatherIconClass(iconCode) {
+            // OpenWeatherMap ikon kodlarına göre Font Awesome sınıflarını döndür
+            const iconMap = {
+                '01d': 'fas fa-sun',
+                '01n': 'fas fa-moon',
+                '02d': 'fas fa-cloud-sun',
+                '02n': 'fas fa-cloud-moon',
+                '03d': 'fas fa-cloud',
+                '03n': 'fas fa-cloud',
+                '04d': 'fas fa-cloud',
+                '04n': 'fas fa-cloud',
+                '09d': 'fas fa-cloud-showers-heavy',
+                '09n': 'fas fa-cloud-showers-heavy',
+                '10d': 'fas fa-cloud-sun-rain',
+                '10n': 'fas fa-cloud-moon-rain',
+                '11d': 'fas fa-bolt',
+                '11n': 'fas fa-bolt',
+                '13d': 'fas fa-snowflake',
+                '13n': 'fas fa-snowflake',
+                '50d': 'fas fa-smog',
+                '50n': 'fas fa-smog'
+            };
+            
+            return iconMap[iconCode] || 'fas fa-cloud';
+        }
+        
+        function showError() {
+            weatherInfo.style.display = 'none';
+            errorMessage.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
